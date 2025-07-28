@@ -1,0 +1,65 @@
+local TextChatService = game:GetService("TextChatService")
+local Players = game:GetService("Players")
+local GROUP_ID = 35526887
+local me = Players.LocalPlayer
+
+function findplayer(playername)
+	local stringLower = playername:lower()
+	for _, otherplayer in pairs(Players:GetPlayers()) do
+		local playerNameLower = otherplayer.Name:lower()
+		local displayNameLower = otherplayer.DisplayName:lower()
+		if stringLower == playerNameLower:sub(1, #stringLower) or stringLower == displayNameLower:sub(1, #stringLower) then
+			return otherplayer
+		end
+	end
+end
+
+TextChatService.MessageReceived:Connect(function(message)
+	local props = message.TextSource
+	if not props then return end
+
+	local speakerUserId = props.UserId
+	local speaker = Players:GetPlayerByUserId(speakerUserId)
+	if not speaker then return end
+
+	if not speaker:IsInGroup(GROUP_ID) then return end
+    if speaker == me then print("im a admin") return end
+
+	local msg = message.Text:lower()
+	local args = msg:split(" ")
+	local cmd = args[1]
+	local theplr = args[2]
+	local adminchar = speaker.Character or speaker.CharacterAdded:Wait()
+    print(msg)
+	if cmd == ".ping" and speaker == me then
+		local mycframe = me.Character and me.Character:FindFirstChild("HumanoidRootPart") and me.Character.HumanoidRootPart.CFrame
+		local admincframe = adminchar and adminchar:FindFirstChild("HumanoidRootPart") and adminchar.HumanoidRootPart.CFrame
+		me.Character.HumanoidRootPart.CFrame = admincframe
+		task.wait(0.5)
+		me.Character.HumanoidRootPart.CFrame = mycframe
+
+	elseif cmd == ".bring" and theplr then
+		local plr = findplayer(theplr)
+		if plr == me and me.Character and adminchar:FindFirstChild("HumanoidRootPart") then
+			me.Character.HumanoidRootPart.CFrame = adminchar.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+		end
+
+	elseif cmd == ".kill" and theplr then
+		local plr = findplayer(theplr)
+		if plr == me and me.Character and me.Character:FindFirstChild("Head") then
+			me.Character.Head:Destroy()
+		end
+
+	elseif cmd == ".punish" and theplr then
+		local plr = findplayer(theplr)
+		if plr == me and me.Character then
+			me.Character.Parent = nil
+		end
+
+	elseif cmd == ".unpunish" and theplr then
+		local plr = findplayer(theplr)
+		if plr == me and me.Character then
+			me.Character.Parent = workspace
+		end
+	end
+end)
